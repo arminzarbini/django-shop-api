@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 
@@ -39,19 +39,23 @@ class Product(models.Model):
     banner = models.ImageField(null=True, blank=True, upload_to='images/product/')
     inventory = models.IntegerField(default=0)
     price = models.DecimalField(default=0, max_digits=6, decimal_places=2)
-    discount_percentage = models.IntegerField(null=True, blank=True, validators=[MaxValueValidator(100)])
-    discount_price = models.DecimalField(null=True, blank=True, max_digits=6, decimal_places=2)
+    discount = models.BooleanField(default=False)
+    discount_percentage = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     description = models.TextField(null=True, blank=True)
     archive = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.name}'
     
-    def calculate_discount_percentage(self):
+    def discount_price(self):
         return (self.price) -  (((self.price) * (self.discount_percentage)) / 100)
     
-    def calculate_discount_price(self):
-        return (self.price) - (self.discount_price)
+    def save(self, *args, **kwargs):
+        if self.discount_percentage == 0:
+            self.discount = False
+        else:
+            self.discount = True
+        super(Product, self).save(*args, **kwargs)
     
 
 class Order(models.Model):
