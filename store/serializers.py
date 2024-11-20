@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import Token
 from .models import Product, User
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -25,3 +27,26 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Passwords must match"})
 
         return attrs
+    
+    def create(self, validated_data):
+        user = User.objects.create(
+            username = validated_data['username'],
+            first_name = validated_data['first_name'],
+            last_name = validated_data['last_name'],
+            email = validated_data['email']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user
+
+
+class SignInSerializer(TokenObtainPairSerializer):
+
+    @classmethod
+    def get_token(cls, user):
+        token = super(SignInSerializer, cls).get_token(user)
+
+        token['username'] = user.username
+        return token
+
