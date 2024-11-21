@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import Token
-from .models import Product, User
+from .models import Product, User, Category
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -50,3 +49,19 @@ class SignInSerializer(TokenObtainPairSerializer):
         token['username'] = user.username
         return token
 
+
+class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True, max_length=30, validators=[UniqueValidator(queryset=Category.objects.all(), message='This category is already exists')])
+    
+
+    class Meta:
+        model = Category
+        fields = ['name']
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+        return instance
+    
+    
+    
