@@ -15,8 +15,8 @@ urlpatterns = [
     path('admin/update_category:<int:category_id>', update_category, name='update_category'),
     path('admin/delete_category:<int:category_id>', delete_category, name='delete_category'),
     path('admin/read_product', ReadProduct.as_view(), name='read_product'),
-
-    
+    path('admin/create_product', CreateProduct.as_view(), name='create_product'),
+    path('admin/update_product:<int:pk>', UpdateProduct.as_view(), name='update_product'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

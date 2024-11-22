@@ -45,7 +45,7 @@ class Product(models.Model):
     archive = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.id}:{self.name}'
     
     def discount_price(self):
         return (self.price) -  (((self.price) * (self.discount_percentage)) / 100)

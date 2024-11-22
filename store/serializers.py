@@ -53,7 +53,6 @@ class SignInSerializer(TokenObtainPairSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True, max_length=30, validators=[UniqueValidator(queryset=Category.objects.all(), message='This category is already exists')])
     
-
     class Meta:
         model = Category
         fields = ['name']
@@ -68,7 +67,9 @@ class ProductSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     def get_category(self, obj):
         return Category.objects.get(id=obj.category.id).name
+    
+    name = serializers.CharField(required=True, max_length=100, validators=[UniqueValidator(queryset=Product.objects.all(), message='This Product is already exists')])
 
     class Meta:
         model = Product
-        fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'description', 'archive']
+        fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'discount_price', 'description', 'archive']

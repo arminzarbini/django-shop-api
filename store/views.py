@@ -7,6 +7,7 @@ from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, Cat
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import generics
 
 
 
@@ -85,3 +86,17 @@ class ReadProduct(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class CreateProduct(generics.CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
+
+
+class UpdateProduct(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
+    
+
+    
