@@ -3,7 +3,7 @@ from .models import *
 from rest_framework.views import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
-from .serializers import ProductSerializer, SignUpSerializer, SignInSerializer, CategorySerializer
+from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -16,7 +16,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 @permission_classes([AllowAny])
 def show_products(request):
     products = Product.objects.all().order_by('created_at').reverse()
-    product = ProductSerializer(products, many=True)
+    product = ShopSerializer(products, many=True)
     return Response(data=product.data, status=status.HTTP_200_OK)
 
 
@@ -76,4 +76,12 @@ def update_category(request, category_id):
 def delete_category(request, category_id):
     Category.objects.filter(id=category_id).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ReadProduct(APIView):
+    permission_classes = ([IsAdminUser])
+    def get(self, request):
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ShopSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
@@ -64,4 +64,11 @@ class CategorySerializer(serializers.ModelSerializer):
         return instance
     
     
-    
+class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
+    def get_category(self, obj):
+        return Category.objects.get(id=obj.category.id).name
+
+    class Meta:
+        model = Product
+        fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'description', 'archive']
