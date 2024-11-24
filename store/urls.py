@@ -17,6 +17,12 @@ urlpatterns = [
     path('admin/read_product', ReadProduct.as_view(), name='read_product'),
     path('admin/create_product', CreateProduct.as_view(), name='create_product'),
     path('admin/update_product:<int:pk>', UpdateProduct.as_view(), name='update_product'),
+    path('admin/delete_product:<int:pk>', DeleteProduct.as_view(), name='delete_product'),
+    path('admin/read_product:<int:pk>', ReadProductDetail.as_view(), name='read_product_detail'),
+    path('admin/read_product_category:<str:category_name>', read_product_category, name='read_product_category'),
+
+
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

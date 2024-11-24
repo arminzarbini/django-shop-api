@@ -9,8 +9,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 
-
-
 # Create your views here.
 
 @api_view(['get'])
@@ -63,13 +61,16 @@ def create_category(request):
 @permission_classes([IsAdminUser])
 def update_category(request, category_id):
     data = request.data
-    category = Category.objects.get(id=category_id)
-    serializer = CategorySerializer()
-    if serializer.is_valid:
-        serializer.update(instance=category, validated_data=data)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    if Category.objects.filter(name=data.get('name')).exists():
+        return Response({"name":["This category is already exists"]}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+        category = Category.objects.get(id=category_id)
+        serializer = CategorySerializer()
+        if serializer.is_valid:
+            serializer.update(instance=category, validated_data=data)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['DELETE'])
@@ -98,5 +99,29 @@ class UpdateProduct(generics.UpdateAPIView):
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
     
+
+class DeleteProduct(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
+
+
+class ReadProductDetail(generics.RetrieveAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def read_product_category(request, category_name):
+    try:
+        category = Category.objects.get(name=category_name)
+    except:
+        return Response({"name":["This category dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        products = Product.objects.filter(category=category)
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     
