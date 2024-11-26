@@ -3,21 +3,13 @@ from .models import *
 from rest_framework.views import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
-from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer
+from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer, ProductDetailSerializer
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 
 # Create your views here.
-
-@api_view(['get'])
-@permission_classes([AllowAny])
-def show_products(request):
-    products = Product.objects.all().order_by('created_at').reverse()
-    product = ShopSerializer(products, many=True)
-    return Response(data=product.data, status=status.HTTP_200_OK)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -61,16 +53,20 @@ def create_category(request):
 @permission_classes([IsAdminUser])
 def update_category(request, category_id):
     data = request.data
-    if Category.objects.filter(name=data.get('name')).exists():
-        return Response({"name":["This category is already exists"]}, status=status.HTTP_400_BAD_REQUEST)
-    else:
+    try:
         category = Category.objects.get(id=category_id)
-        serializer = CategorySerializer()
-        if serializer.is_valid:
-            serializer.update(instance=category, validated_data=data)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    except:
+        return Response({"name":["This category id dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        if Category.objects.filter(name=data.get('name')).exists():
+            return Response({"name":["This category is already exists"]}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = CategorySerializer()
+            if serializer.is_valid:
+                serializer.update(instance=category, validated_data=data)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['DELETE'])
@@ -123,5 +119,39 @@ def read_product_category(request, category_name):
         products = Product.objects.filter(category=category)
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def shop(request):
+    products = Product.objects.all().order_by('created_at').reverse()
+    serializer = ShopSerializer(products, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def product_detail(request, product_id):
+    if Product.objects.filter(id=product_id).exists():
+        product = Product.objects.get(id=product_id)
+        serializer = ProductDetailSerializer(product)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+
+class CategoryProduct(APIView):
+    permission_classes = ([AllowAny])
+    def get(self, request, category_name):
+        if Category.objects.filter(name=category_name).exists():
+            category = Category.objects.get(name=category_name)
+            products = Product.objects.filter(category=category).order_by('created_at').reverse()
+            serializer = ProductSerializer(products, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
 
     

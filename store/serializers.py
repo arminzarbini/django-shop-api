@@ -9,7 +9,15 @@ class ShopSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['name', 'brand', 'banner', 'price', 'discount', 'discount_percentage', 'discount_price']
+        fields = ['name', 'banner', 'price', 'discount', 'discount_percentage', 'discount_price']
+
+
+class ProductDetailSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    
+    class Meta:
+        model = Product
+        fields = ['category_name', 'name', 'brand', 'content', 'banner', 'price', 'discount', 'discount_percentage', 'discount_price', 'description']
 
 
 class SignUpSerializer(serializers.ModelSerializer):
