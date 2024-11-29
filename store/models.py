@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
+import string
+import random
 
 # Create your models here.
 
@@ -12,7 +14,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=8, choices=RoleChoices, default=RoleChoices.CUSTOMER)
 
     def __str__(self):
-        return self.username
+        return f'{self.id}:{self.username}'
 
 
 class Category(models.Model):
@@ -62,7 +64,14 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    code = models.CharField(max_length=6)
+    def get_code():
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=int(6)))
+            if Order.objects.filter(code=code).exists():
+                continue
+            else:
+                return code
+    code = models.CharField(max_length=6, default=get_code)
     total_amount = models.DecimalField(default=0, max_digits=6, decimal_places=2)
     address = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=11, null=True, blank=True)
@@ -87,3 +96,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'{self.order.code}:{self.product.name}'
+    
+
+class Cart(models.Model):
+    session = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f'{self.id}:{self.session}'
+    
+
+class CartItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='cartitems')
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cartitems')
+    quantity = models.IntegerField(default=1)
+
+    def __str__(self):
+        return f'{self.product.name}:{self.cart}:{self.quantity}'

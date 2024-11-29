@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, User, Category
+from .models import Product, User, Category, Cart, CartItem
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -14,10 +14,43 @@ class ShopSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
-    
+
     class Meta:
         model = Product
         fields = ['category_name', 'name', 'brand', 'content', 'banner', 'price', 'discount', 'discount_percentage', 'discount_price', 'description']
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ShopSerializer(read_only=True)
+    product_id = serializers.IntegerField()
+    total_item_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'product_id', 'quantity', 'total_item_price']
+
+    def get_total_item_price(self, cartitem):
+        total_item = cartitem.quantity * cartitem.product.price
+        return total_item
+
+
+class CartSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField()
+    total_cart_item = serializers.SerializerMethodField()
+    cartitem = CartItemSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'session', 'cartitem', 'total_cart_item', 'total_price']
+
+    def get_total_price(self, cart):
+        total_price = sum([item.quantity * item.product.pirce for item in cart.cartitems.all()])
+        return total_price
+    
+    def get_total_cart_item(self, cart):
+        total_cart_item = sum([item.quantity for item in cart.cartitems.all()])
+        return total_cart_item
+
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -56,6 +89,54 @@ class SignInSerializer(TokenObtainPairSerializer):
 
         token['username'] = user.username
         return token
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone_number']
+
+
+class ChangeUsernameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['username']
+
+
+class ChangeRoleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['role']
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password_confirm = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['old_password', 'new_password', 'password_confirm']
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({"password": "Passwords must match"})
+
+        return attrs
+    
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data['old_password']):
+            raise serializers.ValidationError({'old_password': 'The password is incorrect'})
+        elif validated_data['old_password'] == validated_data['new_password']:
+            raise serializers.ValidationError({'password':'old and new passwords are the same'})
+        else:
+            instance.set_password(validated_data['new_password'])
+            instance.save()
+            return instance
+    
 
 
 class CategorySerializer(serializers.ModelSerializer):
