@@ -9,8 +9,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import PageNumberPagination
 
 # Create your views here.
+
+class ShopPagination(PageNumberPagination):
+    page_size = 3
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -31,7 +36,7 @@ class SignIn(TokenObtainPairView):
     
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated])
 def update_user_profile(request):
     data = request.data
     user = request.user
@@ -41,9 +46,38 @@ def update_user_profile(request):
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
     else:
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class UpdateUserProfieAdmin(APIView):
+    permission_classes = ([IsAdminUser])
+    def put(self, request, username):
+        data = request.data
+        try:
+            user = User.objects.get(username=username)
+            serializer = UserProfileUpdateSerializer(user, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'name':['This username does not exist']}, status=status.HTTP_404_NOT_FOUND)
 
 
-class ChangeUsername(APIView):
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_username(request):
+    data = request.data
+    user = request.user
+    serializer = ChangeUsernameSerializer(user, data=data)
+    if serializer.is_valid():
+        serializer.update(instance=user, validated_data=data)
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangeUsernameAdmin(APIView):
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -51,7 +85,7 @@ class ChangeUsername(APIView):
             user = User.objects.get(username=username)
             serializer = ChangeUsernameSerializer(user, data=data)
             if serializer.is_valid():
-                serializer.save()
+                serializer.update(instance=user, validated_data=data)
                 return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
             else:
                 return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
@@ -208,8 +242,10 @@ def read_product_category(request, category_name):
 @permission_classes([AllowAny])
 def shop(request):
     products = Product.objects.all().order_by('created_at').reverse()
-    serializer = ShopSerializer(products, many=True)
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
+    paginator = ShopPagination()
+    paginated_products = paginator.paginate_queryset(products, request)
+    serializer = ShopSerializer(paginated_products, many=True)
+    return paginator.get_paginated_response(data=serializer.data)
 
 
 @api_view(['GET'])
