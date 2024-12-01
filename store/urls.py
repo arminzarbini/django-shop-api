@@ -30,6 +30,8 @@ urlpatterns = [
     path('shop', shop, name='shop'),
     path('product/<int:product_id>', product_detail, name='product_detail'),
     path('category/<str:category_name>', CategoryProduct.as_view(), name='category'),
+    path('all_order', AllOrder.as_view(), name='all_order'),
+    path('admin/all_order/<str:username>', AllOrderUser.as_view(), name='all_order_user')
 
 
 ]

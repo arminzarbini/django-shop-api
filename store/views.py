@@ -3,7 +3,7 @@ from .models import *
 from rest_framework.views import Response
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework import status
-from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer, ProductDetailSerializer, CartSerializer, CartItemSerializer, UserProfileUpdateSerializer, ChangeUsernameSerializer, ChangeRoleSerializer, ChangePasswordSerializer
+from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer, ProductDetailSerializer, CartSerializer, CartItemSerializer, UserProfileUpdateSerializer, ChangeUsernameSerializer, ChangeRoleSerializer, ChangePasswordSerializer, OrderSerializer, OrderItemSerializer
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -193,12 +193,10 @@ def delete_category(request, category_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ReadProduct(APIView):
-    permission_classes = ([IsAdminUser])
-    def get(self, request):
-        products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class ReadProduct(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]
 
 
 class CreateProduct(generics.CreateAPIView):
@@ -269,6 +267,31 @@ class CategoryProduct(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        
+
+class AllOrder(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff == True and user.is_superuser == True:
+            return Order.objects.all()
+        else:
+            return Order.objects.filter(user=user)
+
+
+class AllOrderUser(APIView):
+    parser_classes = [IsAdminUser]
+    def get(self, request, username):
+        if User.objects.filter(username=username).exists():
+            user = User.objects.get(username=username)
+            orders = Order.objects.filter(user=user)
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+
 
 class CartItemModelViewSet(ModelViewSet):
     queryset = CartItem.objects.all()

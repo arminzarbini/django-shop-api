@@ -89,14 +89,13 @@ class Order(models.Model):
 class OrderItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='items')
     quantity = models.IntegerField(default=1)
     total_item = models.DecimalField(default=0, max_digits=6, decimal_places=2)
 
     def __str__(self):
         return f'{self.order.code}:{self.product.name}'
-    
 
 class Cart(models.Model):
     session = models.CharField(max_length=100)

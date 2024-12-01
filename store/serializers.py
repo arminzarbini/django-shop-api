@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, User, Category, Cart, CartItem
+from .models import Product, User, Category, Cart, CartItem, Order, OrderItem
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -167,3 +167,38 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'discount_price', 'description', 'archive']
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.SerializerMethodField()
+    def get_product(self, obj):
+        return Product.objects.get(id=obj.product.id).name
+    
+    total_item = serializers.SerializerMethodField()
+    def get_total_item(self, obj):
+        return (obj.product.price * obj.quantity)
+
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', 'total_item']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(read_only=True, many=True)
+
+    user = serializers.SerializerMethodField()
+    def get_user(self, obj):
+        return User.objects.get(id=obj.user.id).username
+    
+    total_amount = serializers.SerializerMethodField()
+    def get_total_amount(self, order):
+        total_amount = sum([item.product.price * item.quantity for item in order.items.all()])
+        return total_amount
+    
+    class Meta:
+        model = Order
+        fields = ['user', 'code', 'items', 'total_amount', 'address', 'phone', 'note', 'delivery_method', 'status'] 
+
+
+    
+
