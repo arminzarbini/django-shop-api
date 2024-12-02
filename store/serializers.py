@@ -20,39 +20,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         fields = ['category_name', 'name', 'brand', 'content', 'banner', 'price', 'discount', 'discount_percentage', 'discount_price', 'description']
 
 
-class CartItemSerializer(serializers.ModelSerializer):
-    product = ShopSerializer(read_only=True)
-    product_id = serializers.IntegerField()
-    total_item_price = serializers.SerializerMethodField()
-
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'total_item_price']
-
-    def get_total_item_price(self, cartitem):
-        total_item = cartitem.quantity * cartitem.product.price
-        return total_item
-
-
-class CartSerializer(serializers.ModelSerializer):
-    total_price = serializers.SerializerMethodField()
-    total_cart_item = serializers.SerializerMethodField()
-    cartitem = CartItemSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Cart
-        fields = ['id', 'session', 'cartitem', 'total_cart_item', 'total_price']
-
-    def get_total_price(self, cart):
-        total_price = sum([item.quantity * item.product.pirce for item in cart.cartitems.all()])
-        return total_price
-    
-    def get_total_cart_item(self, cart):
-        total_cart_item = sum([item.quantity for item in cart.cartitems.all()])
-        return total_cart_item
-
-
-
 class SignUpSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all(), message='This email is already exists')])
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -200,5 +167,27 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['user', 'code', 'items', 'total_amount', 'address', 'phone', 'note', 'delivery_method', 'status'] 
 
 
-    
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ShopSerializer(read_only=True)
+    product_id = serializers.IntegerField()
+    total_item_price = serializers.SerializerMethodField()
+    def get_total_item_price(self, cartitem):
+        total_item_price = cartitem.quantity * cartitem.product.price
+        return total_item_price
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'product_id', 'quantity', 'total_item_price']
+
+
+class CartSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField()
+    def get_total_price(self, cart):
+        total_price = sum([item.quantity * item.product.pirce for item in cart.cartitems.all()])
+        return total_price
+    cartitems = CartItemSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'session_key', 'cartitems', 'total_price']
 

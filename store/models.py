@@ -98,16 +98,16 @@ class OrderItem(models.Model):
         return f'{self.order.code}:{self.product.name}'
 
 class Cart(models.Model):
-    session = models.CharField(max_length=100)
+    session_key = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.id}:{self.session}'
+        return f'{self.id}:{self.session_key}'
     
 
 class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='cartitems')
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cartitems')
-    quantity = models.IntegerField(default=1)
+    quantity = models.IntegerField(default=0)
 
     def __str__(self):
-        return f'{self.product.name}:{self.cart}:{self.quantity}'
+        return f'{self.id}--->{self.product.name}:{self.cart}:{self.quantity}'

@@ -293,6 +293,7 @@ class AllOrderUser(APIView):
             return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 class CartItemModelViewSet(ModelViewSet):
     queryset = CartItem.objects.all()
     serializer_class = CartItemSerializer
@@ -302,12 +303,12 @@ class CartItemModelViewSet(ModelViewSet):
         try:
             product_id = request.data.get('product_id')
 
-            session = request.session.session_key
+            session_key = request.session.session_key
 
-            if not session:
+            if not session_key:
                 request.session.save()
-                session = request.session.session_key
-            cart, created = Cart.objects.get_or_create(session=session)
+                session_key = request.session.session_key
+            cart, created = Cart.objects.get_or_create(session_key=session_key)
             cartitem, created = CartItem.objects.get_or_create(product_id=product_id, cart=cart)
             if not created:
                 cartitem.quantity += 1
@@ -316,7 +317,7 @@ class CartItemModelViewSet(ModelViewSet):
                 cartitem.quantity = 1
                 cartitem.save()
             serializer = CartItemSerializer(cartitem)
-            return Response(serializer.data)
+            return Response({'data': serializer.data, 'message': 'item created'}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -324,15 +325,15 @@ class CartItemModelViewSet(ModelViewSet):
     def update_item(self, request, pk):
         try:
             cartitem = self.get_object()
-            quantity = int(request.data.get('quantity'))
+            quantity = int(request.data.get('quantity', 0))
             if quantity >= 1:
                 cartitem.quantity = quantity
                 cartitem.save()
                 serializer = CartItemSerializer(cartitem)
-                return Response(serializer.data)
+                return Response({'data': serializer.data, 'message': 'item updated'}, status=status.HTTP_204_NO_CONTENT)
             else:
                 cartitem.delete()
-                return Response({'message':'item deleted'})
+                return Response({'message':'item deleted'}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -342,7 +343,7 @@ class CartItemModelViewSet(ModelViewSet):
         cart_id = request.query_params.get('cart_id')
         try:
             cartitem = CartItem.objects.get(product_id=product_id, cart_id=cart_id)
-            quantity = CartItem.quantity
+            quantity = cartitem.quantity
             return Response(quantity)
         except:
             quantity = 0
