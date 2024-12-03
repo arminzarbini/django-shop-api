@@ -72,7 +72,7 @@ class Order(models.Model):
             else:
                 return code
     code = models.CharField(max_length=6, default=get_code)
-    total_amount = models.DecimalField(default=0, max_digits=6, decimal_places=2)
+    total_price = models.DecimalField(default=0, max_digits=6, decimal_places=2)
     address = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=11, null=True, blank=True)
     note = models.CharField(max_length=255, null=True, blank=True)
@@ -83,7 +83,7 @@ class Order(models.Model):
     status = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.code}:{self.user.username}'
+        return f'{self.id}:{self.code}:{self.user.username}'
 
 
 class OrderItem(models.Model):
@@ -92,7 +92,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='items')
     quantity = models.IntegerField(default=1)
-    total_item = models.DecimalField(default=0, max_digits=6, decimal_places=2)
+    total_item_price = models.DecimalField(default=0, max_digits=6, decimal_places=2)
 
     def __str__(self):
         return f'{self.order.code}:{self.product.name}'

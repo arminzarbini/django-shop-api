@@ -141,13 +141,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_product(self, obj):
         return Product.objects.get(id=obj.product.id).name
     
-    total_item = serializers.SerializerMethodField()
-    def get_total_item(self, obj):
+    total_item_price = serializers.SerializerMethodField()
+    def get_total_item_price(self, obj):
         return (obj.product.price * obj.quantity)
 
     class Meta:
         model = OrderItem
-        fields = ['product', 'quantity', 'total_item']
+        fields = ['product', 'quantity', 'total_item_price']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -157,14 +157,30 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         return User.objects.get(id=obj.user.id).username
     
-    total_amount = serializers.SerializerMethodField()
-    def get_total_amount(self, order):
-        total_amount = sum([item.product.price * item.quantity for item in order.items.all()])
-        return total_amount
+    total_price = serializers.SerializerMethodField()
+    def get_total_price(self, order):
+        total_price = sum([item.product.price * item.quantity for item in order.items.all()])
+        return total_price
+    
     
     class Meta:
         model = Order
-        fields = ['user', 'code', 'items', 'total_amount', 'address', 'phone', 'note', 'delivery_method', 'status'] 
+        fields = ['user', 'code', 'items', 'total_price', 'address', 'phone', 'note', 'delivery_method', 'status'] 
+
+
+class RecordOrderSerializer(serializers.Serializer):
+    cart_id = serializers.IntegerField()
+
+    def save(self, **kwargs):
+        cart_id = self.validated_data['cart_id']
+        cart = Cart.objects.get(id=cart_id)
+        user_id = self.context['user_id']
+        user = User.objects.get(id=user_id)
+        order = Order.objects.create(user=user)
+        cartitems = CartItem.objects.filter(cart=cart)
+        for item in cartitems:
+            OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, total_item_price=item.product.price * item.quantity)
+        Order.objects.update(total_price=sum([item.product.price * item.quantity for item in order.items.all()]))
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -190,4 +206,5 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'session_key', 'cartitems', 'total_price']
+
 

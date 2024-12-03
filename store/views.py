@@ -3,7 +3,7 @@ from .models import *
 from rest_framework.views import Response
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework import status
-from .serializers import ShopSerializer, SignUpSerializer, SignInSerializer, CategorySerializer, ProductSerializer, ProductDetailSerializer, CartSerializer, CartItemSerializer, UserProfileUpdateSerializer, ChangeUsernameSerializer, ChangeRoleSerializer, ChangePasswordSerializer, OrderSerializer, OrderItemSerializer
+from .serializers import *
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -270,8 +270,8 @@ class CategoryProduct(APIView):
         
 
 class AllOrder(generics.ListAPIView):
-    serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    serializer_class = OrderSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -279,6 +279,15 @@ class AllOrder(generics.ListAPIView):
             return Order.objects.all()
         else:
             return Order.objects.filter(user=user)
+    
+
+class RecordOrder(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Order.objects.all()
+    serializer_class = RecordOrderSerializer
+
+    def get_serializer_context(self):
+        return {'user_id': self.request.user.id}
 
 
 class AllOrderUser(APIView):
