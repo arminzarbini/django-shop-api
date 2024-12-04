@@ -167,11 +167,19 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['user', 'code', 'items', 'total_price', 'address', 'phone', 'note', 'delivery_method', 'status'] 
 
 
+
 class RecordOrderSerializer(serializers.Serializer):
     cart_id = serializers.IntegerField()
+    note = serializers.CharField()
+    delivery_method = serializers.ChoiceField(choices={'SEND', 'PLACE'})
+    address = serializers.IntegerField()
 
     def save(self, **kwargs):
+        print(self.validated_data)
         cart_id = self.validated_data['cart_id']
+        note = self.validated_data['note']
+        delivery_method = self.validated_data['delivery_method']
+        address = self.validated_data['address']
         cart = Cart.objects.get(id=cart_id)
         user_id = self.context['user_id']
         user = User.objects.get(id=user_id)
@@ -179,14 +187,17 @@ class RecordOrderSerializer(serializers.Serializer):
         cartitems = CartItem.objects.filter(cart=cart)
         for item in cartitems:
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, total_item_price=item.product.price * item.quantity)
-        Order.objects.update(total_price=sum([item.product.price * item.quantity for item in order.items.all()]))
-
+        Order.objects.update(total_price=sum([item.product.price * item.quantity for item in order.items.all()]), note=note, delivery_method=delivery_method, address=address)
+        
 
 class AddressSerializer(serializers.ModelSerializer):
-    
+    username = serializers.SerializerMethodField()
+    def get_username(self, obj):
+        return User.objects.get(id=obj.user.id).username
+
     class Meta:
         model = Address
-        fields = ['user', 'state', 'city', 'address', 'postal_code', 'first_name', 'last_name', 'phone_number'] 
+        fields = ['username', 'state', 'city', 'address', 'postal_code', 'first_name', 'last_name', 'phone_number'] 
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -205,12 +216,11 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
     def get_total_price(self, cart):
-        total_price = sum([item.quantity * item.product.pirce for item in cart.cartitems.all()])
+        total_price = sum([item.quantity * item.product.price for item in cart.cartitems.all()])
         return total_price
     cartitems = CartItemSerializer(read_only=True, many=True)
 
     class Meta:
         model = Cart
         fields = ['id', 'session_key', 'cartitems', 'total_price']
-
 

@@ -279,7 +279,15 @@ class AllOrder(generics.ListAPIView):
             return Order.objects.all()
         else:
             return Order.objects.filter(user=user)
-    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def checkout_address(request):
+    user = request.user
+    address = Address.objects.filter(user=user)
+    serializer = AddressSerializer(address, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class RecordOrder(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -345,7 +353,7 @@ class AddressUser(APIView):
             return Response({'message':'address deleted'}, status=status.HTTP_204_NO_CONTENT)
         except:
             return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class CartItemModelViewSet(ModelViewSet):
     queryset = CartItem.objects.all()

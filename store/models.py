@@ -87,8 +87,7 @@ class Order(models.Model):
                 return code
     code = models.CharField(max_length=6, default=get_code)
     total_price = models.DecimalField(default=0, max_digits=6, decimal_places=2)
-    address = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=11, null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     note = models.CharField(max_length=255, null=True, blank=True)
     class DeliveryMethodChoices(models.TextChoices):
         SEND = 'SEND', 'Send'
