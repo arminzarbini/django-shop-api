@@ -310,6 +310,22 @@ class AllOrderUser(APIView):
             return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def change_order_status(request, order_code):
+    data = request.data
+    try:
+        order = Order.objects.get(code=order_code)
+    except:
+        return Response({'error':'this order code does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = ChangeOrderStatusSerializer(order, data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
 class AddressUser(APIView):
     permission_classes = [IsAuthenticated]
 

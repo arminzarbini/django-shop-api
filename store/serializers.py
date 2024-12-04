@@ -164,8 +164,14 @@ class OrderSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Order
-        fields = ['user', 'code', 'items', 'total_price', 'address', 'phone', 'note', 'delivery_method', 'status'] 
+        fields = ['user', 'code', 'items', 'total_price', 'address', 'note', 'delivery_method', 'status'] 
 
+
+class ChangeOrderStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ['status']
 
 
 class RecordOrderSerializer(serializers.Serializer):

@@ -35,6 +35,7 @@ urlpatterns = [
     path('record_order', RecordOrder.as_view(), name='record_order'),
     path('address', AddressUser.as_view(), name='address_user'),
     path('address/<int:address_id>', AddressUser.as_view(), name='address_user'),
-    path('checkout_address', checkout_address, name='checkout_address')
+    path('checkout_address', checkout_address, name='checkout_address'),
+    path('change_order_status/<str:order_code>', change_order_status, name='change_order_status'),
 
 ]
