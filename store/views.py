@@ -302,6 +302,50 @@ class AllOrderUser(APIView):
             return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
+class AddressUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        address = Address.objects.filter(user=user.id)
+        serializer = AddressSerializer(address, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        user = request.user
+        request.data['user'] = user.id
+        data = request.data
+        serializer = AddressSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request, address_id):
+        user = request.user
+        request.data['user'] = user.id
+        data = request.data
+        try:
+            address = Address.objects.get(id=address_id, user=user)
+            serializer = AddressSerializer(address, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(data=serializer.data, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request, address_id):
+        user = request.user
+        try:
+            address = Address.objects.get(id=address_id, user=user.id)
+            address.delete()
+            return Response({'message':'address deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except:
+            return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class CartItemModelViewSet(ModelViewSet):
     queryset = CartItem.objects.all()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, User, Category, Cart, CartItem, Order, OrderItem
+from .models import Product, User, Category, Cart, CartItem, Order, OrderItem, Address
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -162,7 +162,6 @@ class OrderSerializer(serializers.ModelSerializer):
         total_price = sum([item.product.price * item.quantity for item in order.items.all()])
         return total_price
     
-    
     class Meta:
         model = Order
         fields = ['user', 'code', 'items', 'total_price', 'address', 'phone', 'note', 'delivery_method', 'status'] 
@@ -181,6 +180,13 @@ class RecordOrderSerializer(serializers.Serializer):
         for item in cartitems:
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, total_item_price=item.product.price * item.quantity)
         Order.objects.update(total_price=sum([item.product.price * item.quantity for item in order.items.all()]))
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Address
+        fields = ['user', 'state', 'city', 'address', 'postal_code', 'first_name', 'last_name', 'phone_number'] 
 
 
 class CartItemSerializer(serializers.ModelSerializer):

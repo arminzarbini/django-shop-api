@@ -33,5 +33,7 @@ urlpatterns = [
     path('all_order', AllOrder.as_view(), name='all_order'),
     path('admin/all_order/<str:username>', AllOrderUser.as_view(), name='all_order_user'),
     path('record_order', RecordOrder.as_view(), name='record_order'),
+    path('address', AddressUser.as_view(), name='address_user'),
+    path('address/<int:address_id>', AddressUser.as_view(), name='address_user'),
 
 ]

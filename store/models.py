@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, MinLengthValidator, int_list_validator
+
 import string
 import random
 
 # Create your models here.
 
 class User(AbstractUser):
-    phone_number = models.CharField(max_length=11, null=True, blank=True)
+    phone_number = models.CharField(max_length=11, validators=[int_list_validator(sep=''), MinLengthValidator(11)], null=True, blank=True)
     class RoleChoices(models.TextChoices):
         ADMIN = 'ADMIN', 'Admin'
         CUSTOMER = 'CUSTOMER', 'Customer'
@@ -16,6 +17,19 @@ class User(AbstractUser):
     def __str__(self):
         return f'{self.id}:{self.username}'
 
+
+class Address(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='address')
+    state = models.CharField(max_length=100, default='tehran')
+    city = models.CharField(max_length=100, default='tehran')
+    address = models.CharField(max_length=255)
+    postal_code = models.CharField(max_length=10, validators=[int_list_validator(sep=''), MinLengthValidator(10)], null=True, blank=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    phone_number = models.CharField(max_length=11, validators=[int_list_validator(sep=''), MinLengthValidator(11)], default='09352993173')
+
+    def __str__(self):
+        return f'{self.id}'
 
 class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
