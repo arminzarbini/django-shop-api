@@ -2,6 +2,7 @@ from django.urls import path, include
 from .views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenBlacklistView
 
 router = DefaultRouter()
 router.register('cartitems', CartItemModelViewSet)
@@ -9,6 +10,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('sign_in', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('sign_in/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('sign_out', TokenBlacklistView.as_view(), name='sign_out'),
     path('sign_up', sign_up, name='sign_up'),
     path('update_profie', update_user_profile, name='update_user_profile'),
     path('admin/update_user_profile/<str:username>', UpdateUserProfieAdmin.as_view(), name='update_user_profile_admin'),
