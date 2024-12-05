@@ -179,7 +179,11 @@ class RecordOrderSerializer(serializers.Serializer): #check
         cartitems = CartItem.objects.filter(cart=cart)
         for item in cartitems:
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, total_item_price=item.product.final_price() * item.quantity)
+            product = Product.objects.get(id=item.product.id)
+            product.inventory = product.inventory - item.quantity
+            product.save()
         Order.objects.update(total_price=sum([item.product.final_price() * item.quantity for item in order.items.all()]), note=note, delivery_method=delivery_method, address=address)
+        cart.delete()
         
         
 class CartItemSerializer(serializers.ModelSerializer): #check

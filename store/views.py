@@ -459,36 +459,51 @@ class CartItemModelViewSet(ModelViewSet): #check
     def add_item(self, request):
         try:
             product_id = request.data.get('product_id')
+            product = Product.objects.get(id=product_id)
+            quantity = int(request.data.get('quantity'))
             session_key = request.session.session_key
             if not session_key:
                 request.session.save()
                 session_key = request.session.session_key
-            cart, created = Cart.objects.get_or_create(session_key=session_key)
-            cartitem, created = CartItem.objects.get_or_create(product_id=product_id, cart=cart)
-            if not created:
-                cartitem.quantity += 1
-                cartitem.save()
+            if Cart.objects.filter(session_key=session_key).exists():
+                cart = Cart.objects.get(session_key=session_key)
+                if CartItem.objects.filter(product_id=product_id, cart=cart).exists():
+                    return Response({'message':'This product is in the shopping cart'})
+            if quantity < 1:
+                return Response({'error':'Quantity is less than one'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            elif quantity > product.inventory:
+                return Response({'error':'Inventory is less than order quantity', 'inventory':product.inventory}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
             else:
-                cartitem.quantity = 1
-                cartitem.save()
-            serializer = CartItemSerializer(cartitem)
-            return Response({'data': serializer.data, 'message': 'item created'}, status=status.HTTP_201_CREATED)
+                if Cart.objects.filter(session_key=session_key).exists():
+                    cart = Cart.objects.get(session_key=session_key)
+                    cartitem = CartItem.objects.create(product_id=product_id, cart=cart, quantity=quantity)
+                    serializer = CartItemSerializer(cartitem)
+                    return Response({'data': serializer.data, 'message': 'item created'}, status=status.HTTP_201_CREATED)
+                else:
+                    cart = Cart.objects.create(session_key=session_key)
+                    cartitem = CartItem.objects.create(product_id=product_id, cart=cart, quantity=quantity)
+                    serializer = CartItemSerializer(cartitem)
+                    return Response({'data': serializer.data, 'message': 'item created'}, status=status.HTTP_201_CREATED)
         except:
             return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
-        
+    
     @action(detail=True, methods=['PUT'])
     def update_item(self, request, pk):
         try:
             cartitem = CartItem.objects.get(id=pk)
-            quantity = int(request.data.get('quantity', 0))
-            if quantity >= 1:
-                cartitem.quantity = quantity
-                cartitem.save()
-                serializer = CartItemSerializer(cartitem)
-                return Response({'data': serializer.data, 'message': 'item updated'}, status=status.HTTP_204_NO_CONTENT)
-            else:
+            inventory = cartitem.product.inventory
+            quantity = int(request.data.get('quantity'))
+            if quantity < 1:
                 cartitem.delete()
                 return Response({'message':'item deleted'}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                if quantity > inventory:
+                    return Response({'error':'Inventory is less than order quantity', 'inventory':inventory}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+                else:
+                    cartitem.quantity = quantity
+                    cartitem.save()
+                    serializer = CartItemSerializer(cartitem)
+                    return Response({'data': serializer.data, 'message': 'item updated'}, status=status.HTTP_204_NO_CONTENT)
         except:
             return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
         
