@@ -281,7 +281,7 @@ class CategoryProduct(APIView): #check
             return Response({'error':'This category does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
 
-class AllOrder(generics.ListAPIView):
+class AllOrder(generics.ListAPIView): #check
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
@@ -291,8 +291,18 @@ class AllOrder(generics.ListAPIView):
             return Order.objects.all()
         else:
             return Order.objects.filter(user=user)
+        
 
-@api_view(['GET'])
+@api_view(['GET']) #check
+@permission_classes([IsAuthenticated])
+def checkout_cart(request):
+    cart_id = request.data.get('cart_id')
+    cart = Cart.objects.get(id=cart_id)
+    serializer = CartSerializer(cart)
+    return Response(serializer.data, status.HTTP_200_OK)
+                            
+
+@api_view(['GET']) #check
 @permission_classes([IsAuthenticated])
 def checkout_address(request):
     user = request.user
@@ -301,7 +311,7 @@ def checkout_address(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class RecordOrder(generics.CreateAPIView):
+class RecordOrder(generics.CreateAPIView): #check
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
     serializer_class = RecordOrderSerializer
@@ -310,7 +320,7 @@ class RecordOrder(generics.CreateAPIView):
         return {'user_id': self.request.user.id}
 
 
-class AllOrderUser(APIView):
+class AllOrderUser(APIView): #check
     parser_classes = [IsAdminUser]
     def get(self, request, username):
         if User.objects.filter(username=username).exists():
@@ -319,23 +329,24 @@ class AllOrderUser(APIView):
             serializer = OrderSerializer(orders, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error':'This Username does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAdminUser])
 def change_order_status(request, order_code):
     data = request.data
     try:
         order = Order.objects.get(code=order_code)
+        serializer = ChangeOrderStatusSerializer(order, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     except:
         return Response({'error':'this order code does not exist'}, status=status.HTTP_404_NOT_FOUND)
-    serializer = ChangeOrderStatusSerializer(order, data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
-    else:
-        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 
 class AddressUser(APIView): #check
@@ -440,7 +451,7 @@ class AddressUserAdmin(APIView): #check
             return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class CartItemModelViewSet(ModelViewSet):
+class CartItemModelViewSet(ModelViewSet): #check
     queryset = CartItem.objects.all()
     serializer_class = CartItemSerializer
 
@@ -448,9 +459,7 @@ class CartItemModelViewSet(ModelViewSet):
     def add_item(self, request):
         try:
             product_id = request.data.get('product_id')
-
             session_key = request.session.session_key
-
             if not session_key:
                 request.session.save()
                 session_key = request.session.session_key
@@ -464,13 +473,13 @@ class CartItemModelViewSet(ModelViewSet):
                 cartitem.save()
             serializer = CartItemSerializer(cartitem)
             return Response({'data': serializer.data, 'message': 'item created'}, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
         
     @action(detail=True, methods=['PUT'])
     def update_item(self, request, pk):
         try:
-            cartitem = self.get_object()
+            cartitem = CartItem.objects.get(id=pk)
             quantity = int(request.data.get('quantity', 0))
             if quantity >= 1:
                 cartitem.quantity = quantity
@@ -480,9 +489,8 @@ class CartItemModelViewSet(ModelViewSet):
             else:
                 cartitem.delete()
                 return Response({'message':'item deleted'}, status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        except:
+            return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
         
     @action(detail=False, methods=['GET'])
     def cartitem_quantity(self, request):
@@ -495,7 +503,3 @@ class CartItemModelViewSet(ModelViewSet):
         except:
             quantity = 0
             return Response(quantity)
-
-
-
-

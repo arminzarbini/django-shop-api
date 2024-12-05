@@ -123,4 +123,4 @@ class CartItem(models.Model):
     quantity = models.IntegerField(default=0)
 
     def __str__(self):
-        return f'{self.id}--->{self.product.name}:{self.cart}:{self.quantity}'
+        return f'{self.id}:{self.cart.session_key}---{self.product.name}---{self.quantity}'

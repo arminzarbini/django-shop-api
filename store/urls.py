@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import TokenBlacklistView
 
 router = DefaultRouter()
 router.register('cartitems', CartItemModelViewSet)
+
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -35,17 +36,14 @@ urlpatterns = [
     path('admin/change_role/<str:username>', ChangeRole.as_view(), name='change_role_admin'),
     path('admin/address/<str:username>', AddressUserAdmin.as_view(), name='address_user_admin'),
     path('admin/address/<str:username>/<int:address_id>', AddressUserAdmin.as_view(), name='address_user_admin'),
+    path('admin/all_order/<str:username>', AllOrderUser.as_view(), name='all_order_user'),
+    path('admin/change_order_status/<str:order_code>', change_order_status, name='change_order_status'),
 
     path('shop', shop, name='shop'),
     path('product/<int:product_id>', product_detail, name='product_detail'),
     path('category/<str:category_name>', CategoryProduct.as_view(), name='category'),
-
-
-    path('all_order', AllOrder.as_view(), name='all_order'),
-    path('admin/all_order/<str:username>', AllOrderUser.as_view(), name='all_order_user'),
-    path('record_order', RecordOrder.as_view(), name='record_order'),
+    path('checkout_cart', checkout_cart, name='checkout_cart'),
     path('checkout_address', checkout_address, name='checkout_address'),
-    path('change_order_status/<str:order_code>', change_order_status, name='change_order_status'),
-
-
+    path('record_order', RecordOrder.as_view(), name='record_order'),
+    path('all_order', AllOrder.as_view(), name='all_order'),
 ]
