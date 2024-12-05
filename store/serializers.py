@@ -4,14 +4,14 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
 
-class ShopSerializer(serializers.ModelSerializer): #check
+class ShopSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
         fields = ['name', 'banner', 'price', 'discount', 'discount_percentage', 'final_price']
 
 
-class ProductDetailSerializer(serializers.ModelSerializer): #check
+class ProductDetailSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
@@ -19,7 +19,7 @@ class ProductDetailSerializer(serializers.ModelSerializer): #check
         fields = ['category_name', 'name', 'brand', 'content', 'banner', 'price', 'discount', 'discount_percentage', 'final_price', 'description']
 
 
-class SignUpSerializer(serializers.ModelSerializer): #check
+class SignUpSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all(), message='This email is already exists')])
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True, required=True)
@@ -47,14 +47,14 @@ class SignUpSerializer(serializers.ModelSerializer): #check
         return user
 
 
-class UserProfileUpdateSerializer(serializers.ModelSerializer): #check
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone_number']
 
 
-class ChangeUsernameSerializer(serializers.ModelSerializer): #check
+class ChangeUsernameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -66,14 +66,14 @@ class ChangeUsernameSerializer(serializers.ModelSerializer): #check
         return instance
     
 
-class ChangeRoleSerializer(serializers.ModelSerializer): #check
+class ChangeRoleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = ['role']
 
 
-class ChangePasswordSerializer(serializers.ModelSerializer): #check
+class ChangePasswordSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(write_only=True, required=True)
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True, required=True)
@@ -99,7 +99,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer): #check
             return instance
     
 
-class CategorySerializer(serializers.ModelSerializer): #check
+class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True, max_length=30, validators=[UniqueValidator(queryset=Category.objects.all(), message='This category is already exists')])
     
     class Meta:
@@ -107,7 +107,7 @@ class CategorySerializer(serializers.ModelSerializer): #check
         fields = ['name']
 
     
-class ProductSerializer(serializers.ModelSerializer): #check
+class ProductSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     def get_category(self, obj):
         return Category.objects.get(id=obj.category.id).name
@@ -117,7 +117,7 @@ class ProductSerializer(serializers.ModelSerializer): #check
         fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'final_price', 'description', 'archive']
 
 
-class CreateUpdateProductSerializer(serializers.ModelSerializer):  #check 
+class CreateUpdateProductSerializer(serializers.ModelSerializer): 
     name = serializers.CharField(required=True, max_length=100, validators=[UniqueValidator(queryset=Product.objects.all(), message='This Product is already exists')])
 
     class Meta:
@@ -125,14 +125,14 @@ class CreateUpdateProductSerializer(serializers.ModelSerializer):  #check
         fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'final_price', 'description', 'archive']
     
 
-class AddressSerializer(serializers.ModelSerializer): #check
+class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
         fields = ['user', 'state', 'city', 'address', 'postal_code', 'first_name', 'last_name', 'phone_number'] 
 
 
-class OrderItemSerializer(serializers.ModelSerializer): #check
+class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
     def get_product(self, obj):
         return Product.objects.get(id=obj.product.id).name
@@ -142,7 +142,7 @@ class OrderItemSerializer(serializers.ModelSerializer): #check
         fields = ['product', 'quantity', 'total_item_price']
 
 
-class OrderSerializer(serializers.ModelSerializer): #check
+class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(read_only=True, many=True)
 
     user = serializers.SerializerMethodField()
@@ -154,14 +154,14 @@ class OrderSerializer(serializers.ModelSerializer): #check
         fields = ['user', 'code', 'items', 'total_price', 'address', 'note', 'delivery_method', 'status'] 
 
 
-class ChangeOrderStatusSerializer(serializers.ModelSerializer): #check
+class ChangeOrderStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
         fields = ['status']
 
 
-class RecordOrderSerializer(serializers.Serializer): #check
+class RecordOrderSerializer(serializers.Serializer):
     cart_id = serializers.IntegerField()
     note = serializers.CharField()
     delivery_method = serializers.ChoiceField(choices={'SEND', 'PLACE'})
@@ -186,7 +186,7 @@ class RecordOrderSerializer(serializers.Serializer): #check
         cart.delete()
         
         
-class CartItemSerializer(serializers.ModelSerializer): #check
+class CartItemSerializer(serializers.ModelSerializer):
     product = ShopSerializer(read_only=True)
     product_id = serializers.IntegerField()
     total_item_price = serializers.SerializerMethodField()
@@ -199,7 +199,7 @@ class CartItemSerializer(serializers.ModelSerializer): #check
         fields = ['id', 'product', 'product_id', 'quantity', 'total_item_price']
 
 
-class CartSerializer(serializers.ModelSerializer): #check
+class CartSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
     def get_total_price(self, cart):
         total_price = sum([item.quantity * item.product.final_price() for item in cart.cartitems.all()])

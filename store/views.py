@@ -16,7 +16,7 @@ class ShopPagination(PageNumberPagination):
     page_size = 3
 
 
-@api_view(['POST']) #check
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def sign_up(request):
     serializer = SignUpSerializer(data=request.data)
@@ -27,7 +27,7 @@ def sign_up(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
     data = request.data
@@ -40,7 +40,7 @@ def update_user_profile(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class UpdateUserProfieAdmin(APIView): #check
+class UpdateUserProfieAdmin(APIView):
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -56,7 +56,7 @@ class UpdateUserProfieAdmin(APIView): #check
             return Response({'name':['This username does not exist']}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def change_username(request):
     data = request.data
@@ -69,7 +69,7 @@ def change_username(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChangeUsernameAdmin(APIView): #check
+class ChangeUsernameAdmin(APIView):
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -85,7 +85,7 @@ class ChangeUsernameAdmin(APIView): #check
             return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-class ChangeRole(APIView): #check
+class ChangeRole(APIView):
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -112,7 +112,7 @@ class ChangeRole(APIView): #check
             return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def change_password_admin(request, username):
     data = request.data
@@ -128,7 +128,7 @@ def change_password_admin(request, username):
         return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
     data = request.data
@@ -141,7 +141,7 @@ def change_password(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([IsAdminUser])
 def read_catgory(request):
     categories = Category.objects.all().order_by('created_at').reverse()
@@ -149,7 +149,7 @@ def read_catgory(request):
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST']) #check
+@api_view(['POST'])
 @permission_classes([IsAdminUser])
 def create_category(request):
     data = request.data
@@ -161,7 +161,7 @@ def create_category(request):
         return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def update_category(request, category_id):
     data = request.data
@@ -178,7 +178,7 @@ def update_category(request, category_id):
             return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(['DELETE']) #check
+@api_view(['DELETE'])
 @permission_classes([IsAdminUser])
 def delete_category(request, category_id):
     try:
@@ -190,13 +190,13 @@ def delete_category(request, category_id):
         return Response({'message':'category deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
-class ReadProduct(generics.ListAPIView): #check
+class ReadProduct(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-class CreateProduct(APIView): #check
+class CreateProduct(APIView):
     permission_classes = [IsAdminUser]
     def post(self, request):
         if request.data.get('category'):
@@ -215,25 +215,25 @@ class CreateProduct(APIView): #check
             return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UpdateProduct(generics.UpdateAPIView): #check
+class UpdateProduct(generics.UpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = CreateUpdateProductSerializer
     permission_classes = [IsAdminUser]
     
 
-class DeleteProduct(generics.DestroyAPIView): #check
+class DeleteProduct(generics.DestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-class ReadProductDetail(generics.RetrieveAPIView): #check
+class ReadProductDetail(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([IsAdminUser])
 def read_product_category(request, category_name):
     try:
@@ -246,7 +246,7 @@ def read_product_category(request, category_name):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def shop(request):
     products = Product.objects.all().order_by('created_at').reverse()
@@ -256,7 +256,7 @@ def shop(request):
     return paginator.get_paginated_response(data=serializer.data)
 
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def product_detail(request, product_id):
     if Product.objects.filter(id=product_id).exists():
@@ -267,7 +267,7 @@ def product_detail(request, product_id):
         return Response({'error':'This product id does not exist'}, status=status.HTTP_404_NOT_FOUND)
     
 
-class CategoryProduct(APIView): #check
+class CategoryProduct(APIView):
     permission_classes = ([AllowAny])
     def get(self, request, category_name):
         if Category.objects.filter(name=category_name).exists():
@@ -281,7 +281,7 @@ class CategoryProduct(APIView): #check
             return Response({'error':'This category does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
 
-class AllOrder(generics.ListAPIView): #check
+class AllOrder(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
@@ -293,7 +293,7 @@ class AllOrder(generics.ListAPIView): #check
             return Order.objects.filter(user=user)
         
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def checkout_cart(request):
     cart_id = request.data.get('cart_id')
@@ -302,7 +302,7 @@ def checkout_cart(request):
     return Response(serializer.data, status.HTTP_200_OK)
                             
 
-@api_view(['GET']) #check
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def checkout_address(request):
     user = request.user
@@ -311,7 +311,7 @@ def checkout_address(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class RecordOrder(generics.CreateAPIView): #check
+class RecordOrder(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
     serializer_class = RecordOrderSerializer
@@ -320,7 +320,7 @@ class RecordOrder(generics.CreateAPIView): #check
         return {'user_id': self.request.user.id}
 
 
-class AllOrderUser(APIView): #check
+class AllOrderUser(APIView):
     parser_classes = [IsAdminUser]
     def get(self, request, username):
         if User.objects.filter(username=username).exists():
@@ -332,7 +332,7 @@ class AllOrderUser(APIView): #check
             return Response({'error':'This Username does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT']) #check
+@api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def change_order_status(request, order_code):
     data = request.data
@@ -349,7 +349,7 @@ def change_order_status(request, order_code):
 
     
 
-class AddressUser(APIView): #check
+class AddressUser(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -394,7 +394,7 @@ class AddressUser(APIView): #check
             return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AddressUserAdmin(APIView): #check
+class AddressUserAdmin(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request, username):
@@ -451,7 +451,7 @@ class AddressUserAdmin(APIView): #check
             return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class CartItemModelViewSet(ModelViewSet): #check
+class CartItemModelViewSet(ModelViewSet):
     queryset = CartItem.objects.all()
     serializer_class = CartItemSerializer
 
