@@ -6,7 +6,6 @@ from rest_framework import status
 from .serializers import *
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
@@ -17,7 +16,7 @@ class ShopPagination(PageNumberPagination):
     page_size = 3
 
 
-@api_view(['POST'])
+@api_view(['POST']) #check
 @permission_classes([AllowAny])
 def sign_up(request):
     serializer = SignUpSerializer(data=request.data)
@@ -28,7 +27,7 @@ def sign_up(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
     data = request.data
@@ -41,7 +40,7 @@ def update_user_profile(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class UpdateUserProfieAdmin(APIView):
+class UpdateUserProfieAdmin(APIView): #check
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -57,9 +56,9 @@ class UpdateUserProfieAdmin(APIView):
             return Response({'name':['This username does not exist']}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAuthenticated])
-def update_username(request):
+def change_username(request):
     data = request.data
     user = request.user
     serializer = ChangeUsernameSerializer(user, data=data)
@@ -70,7 +69,7 @@ def update_username(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChangeUsernameAdmin(APIView):
+class ChangeUsernameAdmin(APIView): #check
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -83,10 +82,10 @@ class ChangeUsernameAdmin(APIView):
             else:
                 return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({"name":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-class ChangeRole(APIView):
+class ChangeRole(APIView): #check
     permission_classes = ([IsAdminUser])
     def put(self, request, username):
         data = request.data
@@ -110,23 +109,26 @@ class ChangeRole(APIView):
             else:
                 return Response({'error': 'role field must be ADMIN or CUSTOMER'}, status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({"name":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAdminUser])
 def change_password_admin(request, username):
     data = request.data
-    user = User.objects.get(username=username)
-    serializer = ChangePasswordSerializer(user, data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
-    else:
-        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(username=username)
+        serializer = ChangePasswordSerializer(user, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'password changed'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"username":["This username dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAuthenticated])
 def change_password(request):
     data = request.data
@@ -134,20 +136,20 @@ def change_password(request):
     serializer = ChangePasswordSerializer(user, data=data)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message':'password changed'}, status=status.HTTP_204_NO_CONTENT)
     else:
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
+@api_view(['GET']) #check
 @permission_classes([IsAdminUser])
 def read_catgory(request):
-    categories = Category.objects.all().order_by('id')
+    categories = Category.objects.all().order_by('created_at').reverse()
     serializer = CategorySerializer(categories, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['POST']) #check
 @permission_classes([IsAdminUser])
 def create_category(request):
     data = request.data
@@ -159,56 +161,53 @@ def create_category(request):
         return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT'])
+@api_view(['PUT']) #check
 @permission_classes([IsAdminUser])
 def update_category(request, category_id):
     data = request.data
     try:
         category = Category.objects.get(id=category_id)
     except:
-        return Response({"name":["This category id dose not exist"]}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"name":["This category id does not exist"]}, status=status.HTTP_404_NOT_FOUND)
     else:
-        if Category.objects.filter(name=data.get('name')).exists():
-            return Response({"name":["This category is already exists"]}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CategorySerializer(category, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            serializer = CategorySerializer()
-            if serializer.is_valid:
-                serializer.update(instance=category, validated_data=data)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data=serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(['DELETE'])
+@api_view(['DELETE']) #check
 @permission_classes([IsAdminUser])
 def delete_category(request, category_id):
-    Category.objects.filter(id=category_id).delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    try:
+        category = Category.objects.get(id=category_id)
+    except:
+        return Response({"name":["This category id does not exist"]}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        Category.objects.filter(id=category_id).delete()
+        return Response({'message':'category deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
-class ReadProduct(generics.ListAPIView):
+class ReadProduct(generics.ListAPIView): #check
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-class CreateProduct(generics.CreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    
-
-class CreateProduct(APIView):
+class CreateProduct(APIView): #check
     permission_classes = [IsAdminUser]
     def post(self, request):
-        if request.data['category']:
+        if request.data.get('category'):
             category_name = request.data['category']
             category = Category.objects.get(name=category_name)
             request.data['category'] = category.id
             data = request.data
-            serializer = CreateProductSerializer(data=data)
+            serializer = CreateUpdateProductSerializer(data=data)
         else:
             data = request.data
-            serializer = CreateProductSerializer(data=data)
+            serializer = CreateUpdateProductSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
@@ -216,26 +215,25 @@ class CreateProduct(APIView):
             return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-class UpdateProduct(generics.UpdateAPIView):
+class UpdateProduct(generics.UpdateAPIView): #check
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = CreateUpdateProductSerializer
     permission_classes = [IsAdminUser]
     
 
-class DeleteProduct(generics.DestroyAPIView):
+class DeleteProduct(generics.DestroyAPIView): #check
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-class ReadProductDetail(generics.RetrieveAPIView):
+class ReadProductDetail(generics.RetrieveAPIView): #check
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminUser]
 
 
-@api_view(['GET'])
+@api_view(['GET']) #check
 @permission_classes([IsAdminUser])
 def read_product_category(request, category_name):
     try:
@@ -248,7 +246,7 @@ def read_product_category(request, category_name):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-@api_view(['GET'])
+@api_view(['GET']) #check
 @permission_classes([AllowAny])
 def shop(request):
     products = Product.objects.all().order_by('created_at').reverse()
@@ -258,7 +256,7 @@ def shop(request):
     return paginator.get_paginated_response(data=serializer.data)
 
 
-@api_view(['GET'])
+@api_view(['GET']) #check
 @permission_classes([AllowAny])
 def product_detail(request, product_id):
     if Product.objects.filter(id=product_id).exists():
@@ -266,19 +264,21 @@ def product_detail(request, product_id):
         serializer = ProductDetailSerializer(product)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error':'This product id does not exist'}, status=status.HTTP_404_NOT_FOUND)
     
 
-class CategoryProduct(APIView):
+class CategoryProduct(APIView): #check
     permission_classes = ([AllowAny])
     def get(self, request, category_name):
         if Category.objects.filter(name=category_name).exists():
             category = Category.objects.get(name=category_name)
             products = Product.objects.filter(category=category).order_by('created_at').reverse()
-            serializer = ProductSerializer(products, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            paginator = ShopPagination()
+            paginated_products = paginator.paginate_queryset(products, request)
+            serializer = ShopSerializer(paginated_products, many=True)
+            return paginator.get_paginated_response(data=serializer.data)
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({'error':'This category does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
 
 class AllOrder(generics.ListAPIView):
@@ -338,12 +338,12 @@ def change_order_status(request, order_code):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class AddressUser(APIView):
+class AddressUser(APIView): #check
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        address = Address.objects.filter(user=user.id)
+        address = Address.objects.filter(user=user)
         serializer = AddressSerializer(address, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
@@ -376,11 +376,68 @@ class AddressUser(APIView):
     def delete(self, request, address_id):
         user = request.user
         try:
-            address = Address.objects.get(id=address_id, user=user.id)
+            address = Address.objects.get(id=address_id, user=user)
             address.delete()
             return Response({'message':'address deleted'}, status=status.HTTP_204_NO_CONTENT)
         except:
             return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddressUserAdmin(APIView): #check
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            address = Address.objects.filter(user=user)
+            serializer = AddressSerializer(address, many=True)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+    def post(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            request.data['user'] = user.id
+            data = request.data
+            serializer = AddressSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)            
+            else:
+                return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+    def put(self, request, username, address_id):
+        try:
+            user = User.objects.get(username=username)
+            request.data['user'] = user.id
+            data = request.data
+            try:
+                address = Address.objects.get(id=address_id, user=user)
+                serializer = AddressSerializer(address, data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(data=serializer.data, status=status.HTTP_204_NO_CONTENT)
+                else:
+                    return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+    def delete(self, request, username, address_id):
+        try:
+            user = User.objects.get(username=username)
+            try:
+                address = Address.objects.get(id=address_id, user=user)
+                address.delete()
+                return Response({'message':'address deleted'}, status=status.HTTP_204_NO_CONTENT)
+            except:
+                return Response({'error':'There is a problem'}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'error':'This username does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CartItemModelViewSet(ModelViewSet):
