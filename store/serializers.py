@@ -48,16 +48,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         return user
 
 
-class SignInSerializer(TokenObtainPairSerializer):
-
-    @classmethod
-    def get_token(cls, user):
-        token = super(SignInSerializer, cls).get_token(user)
-
-        token['username'] = user.username
-        return token
-
-
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -128,13 +118,19 @@ class ProductSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     def get_category(self, obj):
         return Category.objects.get(id=obj.category.id).name
-    
-    name = serializers.CharField(required=True, max_length=100, validators=[UniqueValidator(queryset=Product.objects.all(), message='This Product is already exists')])
 
     class Meta:
         model = Product
         fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'discount_price', 'description', 'archive']
 
+
+class CreateProductSerializer(serializers.ModelSerializer):  
+    name = serializers.CharField(required=True, max_length=100, validators=[UniqueValidator(queryset=Product.objects.all(), message='This Product is already exists')])
+
+    class Meta:
+        model = Product
+        fields = ['category', 'name', 'brand', 'content', 'banner', 'inventory', 'price', 'discount', 'discount_percentage', 'discount_price', 'description', 'archive']
+    
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
@@ -229,4 +225,5 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'session_key', 'cartitems', 'total_price']
+
 

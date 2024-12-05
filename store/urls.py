@@ -38,4 +38,5 @@ urlpatterns = [
     path('checkout_address', checkout_address, name='checkout_address'),
     path('change_order_status/<str:order_code>', change_order_status, name='change_order_status'),
 
+
 ]

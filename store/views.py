@@ -28,13 +28,6 @@ def sign_up(request):
         return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class SignIn(TokenObtainPairView):
-    permission_classes = ([AllowAny])
-    def post(self, request):
-        serializer = SignInSerializer
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
@@ -202,7 +195,26 @@ class ReadProduct(generics.ListAPIView):
 class CreateProduct(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    
+
+class CreateProduct(APIView):
     permission_classes = [IsAdminUser]
+    def post(self, request):
+        if request.data['category']:
+            category_name = request.data['category']
+            category = Category.objects.get(name=category_name)
+            request.data['category'] = category.id
+            data = request.data
+            serializer = CreateProductSerializer(data=data)
+        else:
+            data = request.data
+            serializer = CreateProductSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UpdateProduct(generics.UpdateAPIView):
@@ -413,6 +425,7 @@ class CartItemModelViewSet(ModelViewSet):
                 return Response({'message':'item deleted'}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         
     @action(detail=False, methods=['GET'])
     def cartitem_quantity(self, request):
@@ -429,5 +442,3 @@ class CartItemModelViewSet(ModelViewSet):
 
 
 
-
-    
